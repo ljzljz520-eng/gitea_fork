@@ -354,6 +354,14 @@ type ViewJob struct {
 	// Reusable workflow caller fields. Zero/empty for non-caller jobs.
 	IsReusableCaller bool   `json:"isReusableCaller"`
 	CallUses         string `json:"callUses,omitempty"`
+
+	// Environment deployment gate fields.
+	EnvironmentName string `json:"environmentName,omitempty"`
+	EnvironmentURL  string `json:"environmentUrl,omitempty"`
+	DeploymentID    int64  `json:"deploymentId,omitempty"`
+	GateReason      string `json:"gateReason,omitempty"`
+	ReviewStatus    string `json:"reviewStatus,omitempty"`
+	CanReview       bool   `json:"canReview"`
 }
 
 type ViewJobSummary struct {
@@ -617,7 +625,7 @@ func fillViewRunResponseSummary(ctx *context_module.Context, resp *ViewResponse,
 	resp.State.Run.IsSchedule = run.IsSchedule()
 	resp.State.Run.Jobs = make([]*ViewJob, 0, len(jobs)) // marshal to '[]' instead fo 'null' in json
 	for _, v := range jobs {
-		resp.State.Run.Jobs = append(resp.State.Run.Jobs, &ViewJob{
+		viewJob := &ViewJob{
 			ID:       v.ID,
 			Link:     fmt.Sprintf("%s/jobs/%d", run.Link(), v.ID),
 			JobID:    v.JobID,
@@ -630,7 +638,21 @@ func fillViewRunResponseSummary(ctx *context_module.Context, resp *ViewResponse,
 			IsReusableCaller: v.IsReusableCaller,
 			ParentJobID:      v.ParentJobID,
 			CallUses:         v.CallUses,
-		})
+		}
+		if v.Environment != "" {
+			gate, err := actions_service.DescribeJobEnvironment(ctx, run, v, ctx.Doer)
+			if err != nil {
+				log.Error("describe environment gate for job %d: %v", v.ID, err)
+			} else if gate != nil {
+				viewJob.EnvironmentName = gate.EnvironmentName
+				viewJob.EnvironmentURL = gate.EnvironmentURL
+				viewJob.DeploymentID = gate.DeploymentID
+				viewJob.GateReason = gate.GateReason
+				viewJob.ReviewStatus = gate.ReviewStatus
+				viewJob.CanReview = gate.CanReview
+			}
+		}
+		resp.State.Run.Jobs = append(resp.State.Run.Jobs, viewJob)
 	}
 
 	attempts, err := actions_model.ListRunAttemptsByRunID(ctx, run.ID)

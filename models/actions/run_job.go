@@ -127,6 +127,11 @@ type ActionRunJob struct {
 	// When true, a failure of this job does not fail the overall workflow run.
 	ContinueOnError bool `xorm:"NOT NULL DEFAULT FALSE"`
 
+	// Environment is the evaluated target environment name from the job's `environment:` key, empty when the job deploys to none.
+	Environment string `xorm:"INDEX NOT NULL DEFAULT ''"`
+	// EnvironmentURL is the evaluated environment.url, shown with the deployment.
+	EnvironmentURL string `xorm:"VARCHAR(2048) NOT NULL DEFAULT ''"`
+
 	Started timeutil.TimeStamp
 	Stopped timeutil.TimeStamp
 	Created timeutil.TimeStamp `xorm:"created"`

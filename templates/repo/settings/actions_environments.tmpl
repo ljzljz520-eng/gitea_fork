@@ -1,0 +1,55 @@
+{{template "repo/settings/layout_head" (dict "pageClass" "repository settings actions environments")}}
+<div class="repo-setting-content">
+	<h4 class="ui top attached header">
+		{{ctx.Locale.Tr "actions.environments"}}
+		<div class="ui right">
+			<button class="ui primary tiny button show-modal" data-modal="#create-environment-modal">
+				{{ctx.Locale.Tr "actions.environments.create"}}
+			</button>
+		</div>
+	</h4>
+	<div class="ui attached segment">
+		{{if .Rows}}
+		<div class="flex-divided-list items-with-main">
+			{{range .Rows}}
+			<div class="item tw-items-center">
+				<div class="item-leading">{{svg "octicon-server" 32}}</div>
+				<div class="item-main">
+					<div class="item-title">
+						<a href="{{$.RepoLink}}/settings/actions/environments/{{.Env.Name | PathEscapeSegments}}">{{.Env.Name}}</a>
+						{{if .Env.Locked}}<span class="ui red tiny label">{{ctx.Locale.Tr "actions.environments.locked"}}</span>{{end}}
+						{{if .FreezeActive}}<span class="ui blue tiny label">{{ctx.Locale.Tr "actions.environments.frozen" .ActiveWindowName}}</span>{{end}}
+						{{if .Env.Exclusive}}<span class="ui tiny label">{{ctx.Locale.Tr "actions.environments.exclusive"}}</span>{{end}}
+					</div>
+					<div class="item-body">
+						{{if .Env.Description}}{{.Env.Description}}{{else}}-{{end}}
+						· {{ctx.Locale.Tr "actions.environments.reviewers_count" .ReviewerCount}}
+						· {{ctx.Locale.Tr "actions.environments.deployments_count" .DeploymentCount}}
+					</div>
+				</div>
+			</div>
+			{{end}}
+		</div>
+		{{else}}
+		{{ctx.Locale.Tr "actions.environments.none"}}
+		{{end}}
+	</div>
+</div>
+
+<div class="ui small modal" id="create-environment-modal">
+	<div class="header">{{ctx.Locale.Tr "actions.environments.create"}}</div>
+	<form class="ui form form-fetch-action" method="post" action="{{.RepoLink}}/settings/actions/environments">
+		<div class="content">
+			<div class="field">
+				<label>{{ctx.Locale.Tr "name"}}</label>
+				<input name="name" required maxlength="255" placeholder="production">
+			</div>
+			<div class="field">
+				<label>{{ctx.Locale.Tr "description"}}</label>
+				<textarea name="description" rows="2"></textarea>
+			</div>
+		</div>
+		{{template "base/modal_actions_confirm" (dict "ModalButtonTypes" "confirm")}}
+	</form>
+</div>
+{{template "repo/settings/layout_footer" .}}

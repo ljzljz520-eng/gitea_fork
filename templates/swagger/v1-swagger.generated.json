@@ -5751,6 +5751,953 @@
         }
       }
     },
+    "/repos/{owner}/{repo}/actions/deployments": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "List repository deployments",
+        "operationId": "listActionsDeployments",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repository",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/DeploymentList"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/actions/deployments/{id}/reviews": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Approve or reject a pending deployment",
+        "operationId": "reviewActionsDeployment",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repository",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "description": "id of the deployment",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateDeploymentReviewOption"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Deployment"
+          },
+          "403": {
+            "$ref": "#/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/responses/notFound"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/actions/environments": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "List repository environments",
+        "operationId": "listActionsEnvironments",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repository",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/EnvironmentList"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/actions/environments/{environment_name}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Get a repository environment",
+        "operationId": "getActionsEnvironment",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repository",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the environment",
+            "name": "environment_name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Environment"
+          },
+          "404": {
+            "$ref": "#/responses/notFound"
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Create or update a repository environment",
+        "operationId": "updateActionsEnvironment",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repository",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the environment",
+            "name": "environment_name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "environment configuration",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateOrUpdateEnvironmentOption"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Environment"
+          },
+          "422": {
+            "$ref": "#/responses/validationError"
+          }
+        }
+      },
+      "delete": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Delete a repository environment",
+        "operationId": "deleteActionsEnvironment",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repository",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the environment",
+            "name": "environment_name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/responses/empty"
+          },
+          "404": {
+            "$ref": "#/responses/notFound"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/actions/environments/{environment_name}/deployments": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "List environment deployments",
+        "operationId": "listActionsEnvironmentDeployments",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repository",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the environment",
+            "name": "environment_name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/DeploymentList"
+          },
+          "404": {
+            "$ref": "#/responses/notFound"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/actions/environments/{environment_name}/freeze-windows": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "List environment freeze windows",
+        "operationId": "listActionsFreezeWindows",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repository",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the environment",
+            "name": "environment_name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/FreezeWindowList"
+          },
+          "404": {
+            "$ref": "#/responses/notFound"
+          }
+        }
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Create an environment freeze window",
+        "operationId": "createActionsFreezeWindow",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repository",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the environment",
+            "name": "environment_name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateFreezeWindowOption"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "$ref": "#/responses/FreezeWindow"
+          },
+          "422": {
+            "$ref": "#/responses/validationError"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/actions/environments/{environment_name}/freeze-windows/{window_id}": {
+      "delete": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Delete an environment freeze window",
+        "operationId": "deleteActionsFreezeWindow",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repository",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the environment",
+            "name": "environment_name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "description": "id of the freeze window",
+            "name": "window_id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/responses/empty"
+          },
+          "404": {
+            "$ref": "#/responses/notFound"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/actions/environments/{environment_name}/lock": {
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Lock a repository environment",
+        "operationId": "lockActionsEnvironment",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repository",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the environment",
+            "name": "environment_name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/LockEnvironmentOption"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Environment"
+          },
+          "404": {
+            "$ref": "#/responses/notFound"
+          }
+        }
+      },
+      "delete": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Unlock a repository environment",
+        "operationId": "unlockActionsEnvironment",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repository",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the environment",
+            "name": "environment_name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/Environment"
+          },
+          "404": {
+            "$ref": "#/responses/notFound"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/actions/environments/{environment_name}/secrets": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "List environment secrets",
+        "operationId": "listActionsEnvironmentSecrets",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repository",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the environment",
+            "name": "environment_name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/EnvironmentSecretList"
+          },
+          "404": {
+            "$ref": "#/responses/notFound"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/actions/environments/{environment_name}/secrets/{secretname}": {
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Create or update an environment secret",
+        "operationId": "setActionsEnvironmentSecret",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repository",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the environment",
+            "name": "environment_name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the secret",
+            "name": "secretname",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateOrUpdateSecretOption"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "created"
+          },
+          "204": {
+            "description": "updated"
+          },
+          "404": {
+            "$ref": "#/responses/notFound"
+          }
+        }
+      },
+      "delete": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Delete an environment secret",
+        "operationId": "deleteActionsEnvironmentSecret",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repository",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the environment",
+            "name": "environment_name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the secret",
+            "name": "secretname",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/responses/empty"
+          },
+          "404": {
+            "$ref": "#/responses/notFound"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/actions/environments/{environment_name}/variables": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "List environment variables",
+        "operationId": "listActionsEnvironmentVariables",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repository",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the environment",
+            "name": "environment_name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/EnvironmentVariableList"
+          },
+          "404": {
+            "$ref": "#/responses/notFound"
+          }
+        }
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Create an environment variable",
+        "operationId": "createActionsEnvironmentVariable",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repository",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the environment",
+            "name": "environment_name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateEnvironmentVariableOption"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "$ref": "#/responses/EnvironmentVariable"
+          },
+          "404": {
+            "$ref": "#/responses/notFound"
+          },
+          "409": {
+            "$ref": "#/responses/error"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/actions/environments/{environment_name}/variables/{variablename}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Get an environment variable",
+        "operationId": "getActionsEnvironmentVariable",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repository",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the environment",
+            "name": "environment_name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the variable",
+            "name": "variablename",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/EnvironmentVariable"
+          },
+          "404": {
+            "$ref": "#/responses/notFound"
+          }
+        }
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Update an environment variable",
+        "operationId": "updateActionsEnvironmentVariable",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repository",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the environment",
+            "name": "environment_name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the variable",
+            "name": "variablename",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/UpdateEnvironmentVariableOption"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/EnvironmentVariable"
+          },
+          "404": {
+            "$ref": "#/responses/notFound"
+          }
+        }
+      },
+      "delete": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Delete an environment variable",
+        "operationId": "deleteActionsEnvironmentVariable",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repository",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the environment",
+            "name": "environment_name",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the variable",
+            "name": "variablename",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/responses/empty"
+          },
+          "404": {
+            "$ref": "#/responses/notFound"
+          }
+        }
+      }
+    },
     "/repos/{owner}/{repo}/actions/jobs": {
       "get": {
         "produces": [
@@ -27006,6 +27953,21 @@
       },
       "x-go-package": "gitea.dev/modules/structs"
     },
+    "CreateDeploymentReviewOption": {
+      "description": "CreateDeploymentReviewOption for approving or rejecting a pending deployment",
+      "type": "object",
+      "properties": {
+        "comment": {
+          "type": "string",
+          "x-go-name": "Comment"
+        },
+        "event": {
+          "type": "string",
+          "x-go-name": "Event"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
     "CreateEmailOption": {
       "description": "CreateEmailOption options when creating email addresses",
       "type": "object",
@@ -27017,6 +27979,41 @@
             "type": "string"
           },
           "x-go-name": "Emails"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "CreateEnvironmentReviewer": {
+      "description": "CreateEnvironmentReviewer is a reviewer entry in the environment create/update payload",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ID"
+        },
+        "type": {
+          "type": "string",
+          "x-go-name": "Type"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "CreateEnvironmentVariableOption": {
+      "description": "CreateEnvironmentVariableOption for creating an environment variable",
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "string",
+          "x-go-name": "Data"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
         }
       },
       "x-go-package": "gitea.dev/modules/structs"
@@ -27083,6 +28080,52 @@
           "description": "organization name, if forking into an organization",
           "type": "string",
           "x-go-name": "Organization"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "CreateFreezeWindowOption": {
+      "description": "CreateFreezeWindowOption for creating a freeze window",
+      "type": "object",
+      "properties": {
+        "duration_minutes": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "DurationMinutes"
+        },
+        "end_at": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "EndAt"
+        },
+        "kind": {
+          "type": "string",
+          "x-go-name": "Kind"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "start_at": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "StartAt"
+        },
+        "start_time": {
+          "type": "string",
+          "x-go-name": "StartTime"
+        },
+        "timezone": {
+          "type": "string",
+          "x-go-name": "Timezone"
+        },
+        "weekdays": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "x-go-name": "Weekdays"
         }
       },
       "x-go-package": "gitea.dev/modules/structs"
@@ -27379,6 +28422,39 @@
           "description": "Whether to skip secondary authorization",
           "type": "boolean",
           "x-go-name": "SkipSecondaryAuthorization"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "CreateOrUpdateEnvironmentOption": {
+      "description": "CreateOrUpdateEnvironmentOption for creating or updating an environment",
+      "type": "object",
+      "properties": {
+        "branch_patterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "BranchPatterns"
+        },
+        "branch_policy_mode": {
+          "type": "string",
+          "x-go-name": "BranchPolicyMode"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "exclusive": {
+          "type": "boolean",
+          "x-go-name": "Exclusive"
+        },
+        "reviewers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CreateEnvironmentReviewer"
+          },
+          "x-go-name": "Reviewers"
         }
       },
       "x-go-package": "gitea.dev/modules/structs"
@@ -28313,6 +29389,85 @@
         },
         "url": {
           "description": "URL is the API URL for this deploy-key",
+          "type": "string",
+          "x-go-name": "URL"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "Deployment": {
+      "description": "Deployment represents an Actions deployment into an environment",
+      "type": "object",
+      "properties": {
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "CreatedAt"
+        },
+        "environment": {
+          "type": "string",
+          "x-go-name": "Environment"
+        },
+        "environment_id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "EnvironmentID"
+        },
+        "has_review_decision": {
+          "type": "boolean",
+          "x-go-name": "HasReviewDecision"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ID"
+        },
+        "ref": {
+          "type": "string",
+          "x-go-name": "Ref"
+        },
+        "review_comment": {
+          "type": "string",
+          "x-go-name": "ReviewComment"
+        },
+        "reviewed_at": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "ReviewedAt"
+        },
+        "reviewer_id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ReviewerID"
+        },
+        "run_id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "RunID"
+        },
+        "run_job_id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "RunJobID"
+        },
+        "sha": {
+          "type": "string",
+          "x-go-name": "Sha"
+        },
+        "status": {
+          "type": "string",
+          "x-go-name": "Status"
+        },
+        "trigger_user": {
+          "type": "string",
+          "x-go-name": "TriggerUser"
+        },
+        "trigger_user_id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "TriggerUserID"
+        },
+        "url": {
           "type": "string",
           "x-go-name": "URL"
         }
@@ -29421,6 +30576,131 @@
       },
       "x-go-package": "gitea.dev/modules/structs"
     },
+    "Environment": {
+      "description": "Environment represents an Actions deployment environment",
+      "type": "object",
+      "properties": {
+        "branch_patterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "BranchPatterns"
+        },
+        "branch_policy_mode": {
+          "type": "string",
+          "x-go-name": "BranchPolicyMode"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "CreatedAt"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "exclusive": {
+          "type": "boolean",
+          "x-go-name": "Exclusive"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ID"
+        },
+        "locked": {
+          "type": "boolean",
+          "x-go-name": "Locked"
+        },
+        "locked_reason": {
+          "type": "string",
+          "x-go-name": "LockedReason"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "reviewers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EnvironmentReviewer"
+          },
+          "x-go-name": "Reviewers"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "UpdatedAt"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "EnvironmentReviewer": {
+      "description": "EnvironmentReviewer represents a required reviewer of an environment",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ID"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "type": {
+          "type": "string",
+          "x-go-name": "Type"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "EnvironmentSecret": {
+      "description": "EnvironmentSecret represents an Actions secret name scoped to an environment",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "UpdatedAt"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "EnvironmentVariable": {
+      "description": "EnvironmentVariable represents an Actions variable scoped to an environment",
+      "type": "object",
+      "properties": {
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "CreatedAt"
+        },
+        "data": {
+          "type": "string",
+          "x-go-name": "Data"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "UpdatedAt"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
     "ExternalTracker": {
       "description": "ExternalTracker represents settings for external tracker",
       "type": "object",
@@ -29582,6 +30862,62 @@
         },
         "verification": {
           "$ref": "#/definitions/PayloadCommitVerification"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "FreezeWindow": {
+      "description": "FreezeWindow represents a deployment freeze window of an environment",
+      "type": "object",
+      "properties": {
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "CreatedAt"
+        },
+        "duration_minutes": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "DurationMinutes"
+        },
+        "end_at": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "EndAt"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ID"
+        },
+        "kind": {
+          "type": "string",
+          "x-go-name": "Kind"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "start_at": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "StartAt"
+        },
+        "start_time": {
+          "type": "string",
+          "x-go-name": "StartTime"
+        },
+        "timezone": {
+          "type": "string",
+          "x-go-name": "Timezone"
+        },
+        "weekdays": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "x-go-name": "Weekdays"
         }
       },
       "x-go-package": "gitea.dev/modules/structs"
@@ -30660,6 +31996,17 @@
           "description": "URL is the reference URL for the license",
           "type": "string",
           "x-go-name": "URL"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "LockEnvironmentOption": {
+      "description": "LockEnvironmentOption holds the reason when locking an environment",
+      "type": "object",
+      "properties": {
+        "reason": {
+          "type": "string",
+          "x-go-name": "Reason"
         }
       },
       "x-go-package": "gitea.dev/modules/structs"
@@ -33515,6 +34862,21 @@
       },
       "x-go-package": "gitea.dev/modules/structs"
     },
+    "UpdateEnvironmentVariableOption": {
+      "description": "UpdateEnvironmentVariableOption for updating an environment variable",
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "string",
+          "x-go-name": "Data"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
     "UpdateFileOptions": {
       "description": "UpdateFileOptions options for updating or creating a file\nNote: `author` and `committer` are optional (if only one is given, it will be used for the other, otherwise the authenticated user will be used)",
       "type": "object",
@@ -34295,6 +35657,30 @@
         "$ref": "#/definitions/ContentsResponse"
       }
     },
+    "CreateDeploymentReviewOption": {
+      "description": "",
+      "schema": {
+        "$ref": "#/definitions/CreateDeploymentReviewOption"
+      }
+    },
+    "CreateEnvironmentVariableOption": {
+      "description": "",
+      "schema": {
+        "$ref": "#/definitions/CreateEnvironmentVariableOption"
+      }
+    },
+    "CreateFreezeWindowOption": {
+      "description": "",
+      "schema": {
+        "$ref": "#/definitions/CreateFreezeWindowOption"
+      }
+    },
+    "CreateOrUpdateEnvironmentOption": {
+      "description": "Request body models referenced by the environment API endpoints. Kept in this package so the\nspec generator scans the request structs (swagger:model) just like it does for response bodies.",
+      "schema": {
+        "$ref": "#/definitions/CreateOrUpdateEnvironmentOption"
+      }
+    },
     "CronList": {
       "description": "CronList",
       "schema": {
@@ -34325,6 +35711,21 @@
         }
       }
     },
+    "Deployment": {
+      "description": "Deployment",
+      "schema": {
+        "$ref": "#/definitions/Deployment"
+      }
+    },
+    "DeploymentList": {
+      "description": "DeploymentList",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Deployment"
+        }
+      }
+    },
     "EmailList": {
       "description": "EmailList",
       "schema": {
@@ -34338,6 +35739,45 @@
       "description": "EmptyRepository",
       "schema": {
         "$ref": "#/definitions/APIError"
+      }
+    },
+    "Environment": {
+      "description": "Environment",
+      "schema": {
+        "$ref": "#/definitions/Environment"
+      }
+    },
+    "EnvironmentList": {
+      "description": "EnvironmentList",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Environment"
+        }
+      }
+    },
+    "EnvironmentSecretList": {
+      "description": "EnvironmentSecretList",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/EnvironmentSecret"
+        }
+      }
+    },
+    "EnvironmentVariable": {
+      "description": "EnvironmentVariable",
+      "schema": {
+        "$ref": "#/definitions/EnvironmentVariable"
+      }
+    },
+    "EnvironmentVariableList": {
+      "description": "EnvironmentVariableList",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/EnvironmentVariable"
+        }
       }
     },
     "FileDeleteResponse": {
@@ -34356,6 +35796,21 @@
       "description": "FilesResponse",
       "schema": {
         "$ref": "#/definitions/FilesResponse"
+      }
+    },
+    "FreezeWindow": {
+      "description": "FreezeWindow",
+      "schema": {
+        "$ref": "#/definitions/FreezeWindow"
+      }
+    },
+    "FreezeWindowList": {
+      "description": "FreezeWindowList",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/FreezeWindow"
+        }
       }
     },
     "GPGKey": {
@@ -34549,6 +36004,12 @@
         "items": {
           "type": "string"
         }
+      }
+    },
+    "LockEnvironmentOption": {
+      "description": "",
+      "schema": {
+        "$ref": "#/definitions/LockEnvironmentOption"
       }
     },
     "MarkdownRender": {
@@ -35004,6 +36465,12 @@
         "items": {
           "$ref": "#/definitions/TrackedTime"
         }
+      }
+    },
+    "UpdateEnvironmentVariableOption": {
+      "description": "",
+      "schema": {
+        "$ref": "#/definitions/UpdateEnvironmentVariableOption"
       }
     },
     "User": {

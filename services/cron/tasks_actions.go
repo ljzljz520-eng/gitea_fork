@@ -21,6 +21,7 @@ func initActionsTasks() {
 	registerScheduleTasks()
 	registerActionsCleanup()
 	registerCleanupActionRuns()
+	registerReemitEnvironmentDeployments()
 }
 
 func registerStopZombieTasks() {
@@ -83,5 +84,17 @@ func registerCleanupActionRuns() {
 		Schedule:   "@midnight",
 	}, func(ctx context.Context, _ *user_model.User, _ *BaseConfig) error {
 		return actions_service.CleanupOldRuns(ctx)
+	})
+}
+
+// registerReemitEnvironmentDeployments re-evaluates runs blocked on an environment gate
+// every minute, so deployments held by an expired freeze window resume automatically.
+func registerReemitEnvironmentDeployments() {
+	RegisterTaskFatal("reemit_environment_deployments", &BaseConfig{
+		Enabled:    true,
+		RunAtStart: false,
+		Schedule:   "@every 1m",
+	}, func(ctx context.Context, _ *user_model.User, _ *BaseConfig) error {
+		return actions_service.ReEmitEnvironmentBlockedRuns(ctx)
 	})
 }

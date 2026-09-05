@@ -5,6 +5,7 @@ package secret
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -181,7 +182,13 @@ func GetSecretsOfTask(ctx context.Context, task *actions_model.ActionTask) (map[
 		return nil, err
 	}
 
-	for _, secret := range append(ownerSecrets, repoSecrets...) {
+	envSecrets, err := environmentSecretsForTask(ctx, task.Job)
+	if err != nil {
+		log.Error("find environment secrets for job %v: %v", task.Job.ID, err)
+		envSecrets = nil
+	}
+
+	for _, secret := range append(ownerSecrets, append(repoSecrets, envSecrets...)...) {
 		v, err := secret_module.DecryptSecret(setting.SecretKey, secret.Data)
 		if err != nil {
 			log.Error("Unable to decrypt Actions secret %v %q, maybe SECRET_KEY is wrong: %v", secret.ID, secret.Name, err)
@@ -191,6 +198,38 @@ func GetSecretsOfTask(ctx context.Context, task *actions_model.ActionTask) (map[
 	}
 
 	return getScopedSecretsForJob(ctx, task.Job, baseSecrets)
+}
+
+// environmentSecretsForTask returns the (still encrypted) secrets of the environment targeted by the job.
+func environmentSecretsForTask(ctx context.Context, job *actions_model.ActionRunJob) ([]*Secret, error) {
+	if job.Environment == "" {
+		return nil, nil
+	}
+	if err := job.LoadRun(ctx); err != nil {
+		return nil, err
+	}
+	env, err := actions_model.GetEnvironmentByName(ctx, job.Run.RepoID, job.Environment)
+	if err != nil {
+		if errors.Is(err, util.ErrNotExist) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	envSecrets, err := actions_model.FindEnvironmentSecrets(ctx, actions_model.FindEnvironmentSecretsOpts{EnvID: env.ID})
+	if err != nil {
+		return nil, err
+	}
+	secrets := make([]*Secret, 0, len(envSecrets))
+	for _, s := range envSecrets {
+		secrets = append(secrets, &Secret{
+			ID:      s.ID,
+			Name:    s.Name,
+			Data:    s.Data,
+			OwnerID: 0,
+			RepoID:  job.Run.RepoID,
+		})
+	}
+	return secrets, nil
 }
 
 // getScopedSecretsForJob walks up the caller chain (ParentJobID) and applies

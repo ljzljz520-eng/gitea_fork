@@ -1,0 +1,192 @@
+{{template "repo/settings/layout_head" (dict "pageClass" "repository settings actions environment")}}
+<div class="repo-setting-content">
+	<h4 class="ui top attached header">
+		<a href="{{.RepoLink}}/settings/actions/environments">{{ctx.Locale.Tr "actions.environments"}}</a> / {{.Env.Name}}
+		<div class="ui right">
+			{{if .Env.Locked}}
+			<button class="ui red tiny button link-action" data-url="{{$.RepoLink}}/settings/actions/environments/{{.Env.Name | PathEscapeSegments}}/unlock" data-modal-confirm="{{ctx.Locale.Tr "actions.environments.unlock_confirm"}}">{{ctx.Locale.Tr "actions.environments.unlock"}}</button>
+			{{else}}
+			<button class="ui orange tiny button show-modal" data-modal="#lock-environment-modal">{{ctx.Locale.Tr "actions.environments.lock"}}</button>
+			{{end}}
+			<button class="ui red tiny button link-action" data-url="{{$.RepoLink}}/settings/actions/environments/{{.Env.Name | PathEscapeSegments}}/delete" data-modal-confirm="{{ctx.Locale.Tr "actions.environments.delete_confirm" .Env.Name}}">{{ctx.Locale.Tr "actions.environments.delete"}}</button>
+		</div>
+	</h4>
+
+	<div class="ui attached segment">
+		{{if .Env.Locked}}
+		<div class="ui red message">{{ctx.Locale.Tr "actions.environments.locked_reason" .Env.LockedReason}}</div>
+		{{end}}
+		<form class="ui form form-fetch-action" method="post" action="{{$.RepoLink}}/settings/actions/environments/{{.Env.Name | PathEscapeSegments}}">
+			<div class="field">
+				<label>{{ctx.Locale.Tr "description"}}</label>
+				<textarea name="description" rows="2">{{.Env.Description}}</textarea>
+			</div>
+
+			<div class="ui divider"></div>
+			<h5>{{ctx.Locale.Tr "actions.environments.deployment_rules"}}</h5>
+
+			<div class="field">
+				<label>{{ctx.Locale.Tr "actions.environments.branch_policy"}}</label>
+				<select class="ui dropdown" name="branch_policy_mode">
+					<option value="all" {{if eq .Env.BranchPolicyMode 0}}selected{{end}}>{{ctx.Locale.Tr "actions.environments.branch_policy_all"}}</option>
+					<option value="protected" {{if eq .Env.BranchPolicyMode 1}}selected{{end}}>{{ctx.Locale.Tr "actions.environments.branch_policy_protected"}}</option>
+					<option value="selected" {{if eq .Env.BranchPolicyMode 2}}selected{{end}}>{{ctx.Locale.Tr "actions.environments.branch_policy_selected"}}</option>
+				</select>
+			</div>
+			<div class="field">
+				<label>{{ctx.Locale.Tr "actions.environments.branch_patterns"}}</label>
+				<textarea name="branch_patterns" rows="3" placeholder="release-*&#10;main">{{range .Branches}}{{.Pattern}}{{"\n"}}{{end}}</textarea>
+			</div>
+
+			<div class="field">
+				<label>{{ctx.Locale.Tr "actions.environments.reviewers"}}<span class="tw-text-light-2">{{ctx.Locale.Tr "actions.environments.reviewers_hint"}}</span></label>
+				<input name="reviewers" value="{{.ReviewerNames}}" placeholder="alice, @owners-team">
+			</div>
+
+			<div class="field">
+				<div class="ui checkbox">
+					<input type="checkbox" name="exclusive" value="true" {{if .Env.Exclusive}}checked{{end}}>
+					<label>{{ctx.Locale.Tr "actions.environments.exclusive"}}</label>
+				</div>
+			</div>
+
+			<button class="ui primary button">{{ctx.Locale.Tr "actions.environments.update"}}</button>
+		</form>
+	</div>
+
+	<h4 class="ui attached header">{{ctx.Locale.Tr "actions.environments.freeze_windows"}}</h4>
+	<div class="ui attached segment">
+		{{if .FreezeWindows}}
+		<table class="ui table">
+			<thead><tr><th>{{ctx.Locale.Tr "name"}}</th><th>{{ctx.Locale.Tr "actions.environments.freeze_window_when"}}</th><th></th></tr></thead>
+			<tbody>
+			{{range .FreezeWindows}}
+			<tr>
+				<td>{{if .Name}}{{.Name}}{{else}}#{{.ID}}{{end}}</td>
+				<td>
+					{{if eq .Kind 1}}
+						{{ctx.Locale.Tr "actions.environments.freeze_recurring" .StartTime .DurationMinutes}}
+					{{else}}
+						{{DateUtils.AbsoluteShort .StartUnix}} – {{DateUtils.AbsoluteShort .EndUnix}}
+					{{end}}
+				</td>
+				<td>
+					<button class="btn interact-bg link-action"
+						data-url="{{$.RepoLink}}/settings/actions/environments/{{$.Env.Name | PathEscapeSegments}}/freeze-windows/{{.ID}}/delete"
+						data-modal-confirm="{{ctx.Locale.Tr "actions.environments.freeze_delete_confirm"}}">
+						{{svg "octicon-trash"}}
+					</button>
+				</td>
+			</tr>
+			{{end}}
+			</tbody>
+		</table>
+		{{else}}
+		{{ctx.Locale.Tr "actions.environments.freeze_none"}}
+		{{end}}
+		<form class="ui form form-fetch-action tw-mt-4" method="post" action="{{$.RepoLink}}/settings/actions/environments/{{.Env.Name | PathEscapeSegments}}/freeze-windows">
+			<div class="fields">
+				<div class="field">
+					<label>{{ctx.Locale.Tr "name"}}</label>
+					<input name="name" placeholder="{{ctx.Locale.Tr "actions.environments.freeze_name_placeholder"}}">
+				</div>
+				<div class="field">
+					<label>{{ctx.Locale.Tr "actions.environments.freeze_start"}}</label>
+					<input type="datetime-local" name="start_at">
+				</div>
+				<div class="field">
+					<label>{{ctx.Locale.Tr "actions.environments.freeze_end"}}</label>
+					<input type="datetime-local" name="end_at">
+				</div>
+			</div>
+			<button class="ui primary button">{{ctx.Locale.Tr "actions.environments.freeze_add"}}</button>
+		</form>
+	</div>
+
+	<h4 class="ui attached header">{{ctx.Locale.Tr "actions.variables"}}</h4>
+	<div class="ui attached segment">
+		{{if .EnvVariables}}
+		<table class="ui table">
+			<thead><tr><th>{{ctx.Locale.Tr "name"}}</th><th>{{ctx.Locale.Tr "value"}}</th><th></th></tr></thead>
+			<tbody>
+			{{range .EnvVariables}}
+			<tr>
+				<td>{{.Name}}</td>
+				<td>{{.Data}}</td>
+				<td>
+					<button class="btn interact-bg link-action"
+						data-url="{{$.RepoLink}}/settings/actions/environments/{{$.Env.Name | PathEscapeSegments}}/variables/{{.Name | PathEscapeSegments}}/delete"
+						data-modal-confirm="{{ctx.Locale.Tr "actions.variables.deletion.description"}}">
+						{{svg "octicon-trash"}}
+					</button>
+				</td>
+			</tr>
+			{{end}}
+			</tbody>
+		</table>
+		{{else}}
+		{{ctx.Locale.Tr "actions.variables.none"}}
+		{{end}}
+		<form class="ui form form-fetch-action tw-mt-4" method="post" action="{{$.RepoLink}}/settings/actions/environments/{{.Env.Name | PathEscapeSegments}}/variables">
+			<div class="fields">
+				<div class="field"><label>{{ctx.Locale.Tr "name"}}</label><input name="name" required pattern="^[a-zA-Z_][a-zA-Z0-9_]*$"></div>
+				<div class="field"><label>{{ctx.Locale.Tr "value"}}</label><input name="data"></div>
+			</div>
+			<button class="ui primary button">{{ctx.Locale.Tr "actions.variables.creation"}}</button>
+		</form>
+	</div>
+
+	<h4 class="ui attached header">{{ctx.Locale.Tr "secrets.secrets"}}</h4>
+	<div class="ui attached segment">
+		{{if .EnvSecrets}}
+		<ul class="ui list">
+			{{range .EnvSecrets}}<li class="item">{{.Name}}</li>{{end}}
+		</ul>
+		{{else}}
+		{{ctx.Locale.Tr "secrets.secrets.none"}}
+		{{end}}
+		<form class="ui form form-fetch-action tw-mt-4" method="post" action="{{$.RepoLink}}/settings/actions/environments/{{.Env.Name | PathEscapeSegments}}/secrets">
+			<div class="fields">
+				<div class="field"><label>{{ctx.Locale.Tr "name"}}</label><input name="name" required pattern="^[a-zA-Z_][a-zA-Z0-9_]*$"></div>
+				<div class="field"><label>{{ctx.Locale.Tr "secrets.secrets.creation.value"}}</label><input name="data"></div>
+			</div>
+			<button class="ui primary button">{{ctx.Locale.Tr "secrets.secrets.creation"}}</button>
+		</form>
+	</div>
+
+	<h4 class="ui attached header">{{ctx.Locale.Tr "actions.environments.deployments"}}</h4>
+	<div class="ui attached segment">
+		{{if .Deployments}}
+		<table class="ui table">
+			<thead><tr><th>ID</th><th>{{ctx.Locale.Tr "actions.runs.run"}}</th><th>{{ctx.Locale.Tr "actions.environments.status"}}</th><th>{{ctx.Locale.Tr "actions.environments.deployer"}}</th><th>{{ctx.Locale.Tr "actions.environments.deployed_at"}}</th></tr></thead>
+			<tbody>
+			{{range .Deployments}}
+			<tr>
+				<td>{{.ID}}</td>
+				<td><a href="{{$.RepoLink}}/actions/runs/{{.RunID}}">#{{.RunID}}</a> {{.Ref}}</td>
+				<td><span class="ui tiny label">{{.ReviewStatus}}</span></td>
+				<td>{{.TriggerUserID}}</td>
+				<td>{{DateUtils.AbsoluteShort .CreatedUnix}}</td>
+			</tr>
+			{{end}}
+			</tbody>
+		</table>
+		{{else}}
+		{{ctx.Locale.Tr "actions.environments.no_deployments"}}
+		{{end}}
+	</div>
+</div>
+
+<div class="ui small modal" id="lock-environment-modal">
+	<div class="header">{{ctx.Locale.Tr "actions.environments.lock"}}</div>
+	<form class="ui form form-fetch-action" method="post" action="{{$.RepoLink}}/settings/actions/environments/{{.Env.Name | PathEscapeSegments}}/lock">
+		<div class="content">
+			<div class="field">
+				<label>{{ctx.Locale.Tr "actions.environments.lock_reason"}}</label>
+				<textarea name="reason" rows="2"></textarea>
+			</div>
+		</div>
+		{{template "base/modal_actions_confirm" (dict "ModalButtonTypes" "confirm")}}
+	</form>
+</div>
+{{template "repo/settings/layout_footer" .}}

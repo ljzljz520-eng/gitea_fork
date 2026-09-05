@@ -107,6 +107,7 @@ type Job struct {
 	RawNeeds           yaml.Node                 `yaml:"needs,omitempty"`
 	RawRunsOn          yaml.Node                 `yaml:"runs-on,omitempty"`
 	Env                yaml.Node                 `yaml:"env,omitempty"`
+	Environment        yaml.Node                 `yaml:"environment,omitempty"`
 	If                 yaml.Node                 `yaml:"if,omitempty"`
 	Steps              []*Step                   `yaml:"steps,omitempty"`
 	TimeoutMinutes     string                    `yaml:"timeout-minutes,omitempty"`
@@ -145,6 +146,7 @@ func (j *Job) Clone() *Job {
 		RawNeeds:           j.RawNeeds,
 		RawRunsOn:          j.RawRunsOn,
 		Env:                j.Env,
+		Environment:        j.Environment,
 		If:                 j.If,
 		Steps:              j.Steps,
 		TimeoutMinutes:     j.TimeoutMinutes,
@@ -173,6 +175,85 @@ func (j *Job) EraseNeeds() *Job {
 
 func (j *Job) RunsOn() []string {
 	return (&model.Job{RawRunsOn: j.RawRunsOn}).RunsOn()
+}
+
+// HasEnvironment reports whether the job declares an `environment:` key.
+func (j *Job) HasEnvironment() bool {
+	return j.Environment.Kind != 0
+}
+
+// EnvironmentSpec decodes the raw `environment:` key, accepting either a scalar
+// string or a mapping with `name`/`url`. Values may still contain unevaluated
+// expressions; callers use EvaluateEnvironment to resolve them.
+func (j *Job) EnvironmentSpec() (name, url string, ok bool, err error) {
+	if j.Environment.Kind == 0 {
+		return "", "", false, nil
+	}
+	switch j.Environment.Kind {
+	case yaml.ScalarNode:
+		var s string
+		if err = j.Environment.Decode(&s); err != nil {
+			return "", "", false, err
+		}
+		return s, "", s != "", nil
+	case yaml.MappingNode:
+		var spec struct {
+			Name string `yaml:"name"`
+			URL  string `yaml:"url"`
+		}
+		if err = j.Environment.Decode(&spec); err != nil {
+			return "", "", false, err
+		}
+		if spec.Name == "" {
+			return "", "", false, errors.New("environment.name is required")
+		}
+		return spec.Name, spec.URL, true, nil
+	default:
+		return "", "", false, errors.New("environment must be a string or a mapping")
+	}
+}
+
+// EvaluateEnvironment resolves expressions in the job's `environment:` key and
+// returns the evaluated name and URL. An empty name means no environment.
+func EvaluateEnvironment(jobID string, job *Job, gitCtx map[string]any, results map[string]*JobResult, vars map[string]string, inputs map[string]any) (name, url string, err error) {
+	if job == nil || job.Environment.Kind == 0 {
+		return "", "", nil
+	}
+
+	actJob := &model.Job{
+		Strategy: &model.Strategy{
+			FailFastString:    job.Strategy.FailFastString,
+			MaxParallelString: job.Strategy.MaxParallelString,
+			RawMatrix:         job.Strategy.RawMatrix,
+		},
+	}
+	actJob.Strategy.FailFast = actJob.Strategy.GetFailFast()
+	actJob.Strategy.MaxParallel = actJob.Strategy.GetMaxParallel()
+
+	matrix := make(map[string]any)
+	matrixes, err := matrixesOf(actJob)
+	if err != nil {
+		return "", "", err
+	}
+	if len(matrixes) > 0 {
+		matrix = matrixes[0]
+	}
+
+	evaluator := expreval.New(NewInterpeter(jobID, actJob, matrix, toGitContext(gitCtx), results, vars, inputs).Evaluate)
+	evaluated := job.Environment
+	if err = evaluator.EvaluateYamlNode(&evaluated); err != nil {
+		return "", "", fmt.Errorf("failed to evaluate environment: %w", err)
+	}
+
+	var ok bool
+	name, url, ok, err = (&Job{Environment: evaluated}).EnvironmentSpec()
+	if err != nil {
+		return "", "", err
+	}
+	if !ok {
+		return "", "", errors.New("environment.name is required after evaluation")
+	}
+	return name, url, nil
 }
 
 type Step struct {

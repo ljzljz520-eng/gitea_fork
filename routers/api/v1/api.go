@@ -1411,6 +1411,37 @@ func Routes() *web.Router {
 				}, reqToken(), reqAdmin())
 				m.Group("/actions", func() {
 					m.Get("/tasks", repo.ListActionTasks)
+					m.Group("/environments", func() {
+						m.Get("", repo.ListEnvironments)
+						m.Combo("/{environment_name}").
+							Get(repo.GetEnvironment).
+							Put(reqToken(), reqAdmin(), bind(api.CreateOrUpdateEnvironmentOption{}), repo.UpdateEnvironment).
+							Delete(reqToken(), reqAdmin(), repo.DeleteEnvironment)
+						m.Combo("/{environment_name}/lock").
+							Put(reqToken(), reqAdmin(), bind(api.LockEnvironmentOption{}), repo.LockEnvironment).
+							Delete(reqToken(), reqAdmin(), repo.UnlockEnvironment)
+						m.Group("/{environment_name}/freeze-windows", func() {
+							m.Get("", repo.ListFreezeWindows)
+							m.Post("", reqToken(), reqAdmin(), bind(api.CreateFreezeWindowOption{}), repo.CreateFreezeWindow)
+							m.Delete("/{window_id}", reqToken(), reqAdmin(), repo.DeleteFreezeWindow)
+						})
+						m.Group("/{environment_name}/variables", func() {
+							m.Get("", repo.ListEnvironmentVariables)
+							m.Post("", reqToken(), reqAdmin(), bind(api.CreateEnvironmentVariableOption{}), repo.CreateEnvironmentVariable)
+							m.Combo("/{variablename}").
+								Get(repo.GetEnvironmentVariable).
+								Put(reqToken(), reqAdmin(), bind(api.UpdateEnvironmentVariableOption{}), repo.UpdateEnvironmentVariable).
+								Delete(reqToken(), reqAdmin(), repo.DeleteEnvironmentVariable)
+						})
+						m.Group("/{environment_name}/secrets", func() {
+							m.Get("", repo.ListEnvironmentSecrets)
+							m.Put("/{secretname}", reqToken(), reqAdmin(), bind(api.CreateOrUpdateSecretOption{}), repo.SetEnvironmentSecret)
+							m.Delete("/{secretname}", reqToken(), reqAdmin(), repo.DeleteEnvironmentSecret)
+						})
+						m.Get("/{environment_name}/deployments", repo.ListEnvironmentDeployments)
+					})
+					m.Get("/deployments", repo.ListDeployments)
+					m.Post("/deployments/{id}/reviews", reqToken(), reqRepoWriter(unit.TypeActions), bind(api.CreateDeploymentReviewOption{}), repo.ReviewDeployment)
 					m.Group("/runs", func() {
 						m.Group("/{run}", func() {
 							m.Get("", repo.GetWorkflowRun)

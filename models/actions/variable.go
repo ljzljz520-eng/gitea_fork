@@ -5,6 +5,7 @@ package actions
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"unicode/utf8"
 
@@ -170,6 +171,34 @@ func GetVariablesOfRun(ctx context.Context, run *ActionRun) (map[string]string, 
 		variables[v.Name] = v.Data
 	}
 
+	return variables, nil
+}
+
+// GetVariablesOfJob returns the variables visible to a run, additionally merging environment-scoped
+// variables when the job targets an environment. Environment variables win every precedence level.
+func GetVariablesOfJob(ctx context.Context, run *ActionRun, envName string) (map[string]string, error) {
+	variables, err := GetVariablesOfRun(ctx, run)
+	if err != nil {
+		return nil, err
+	}
+	if envName == "" {
+		return variables, nil
+	}
+	env, err := GetEnvironmentByName(ctx, run.RepoID, envName)
+	if err != nil {
+		if errors.Is(err, util.ErrNotExist) {
+			return variables, nil
+		}
+		return nil, err
+	}
+	envVariables, err := GetEnvironmentVariablesMap(ctx, env.ID)
+	if err != nil {
+		log.Error("find variables of environment %d: %v", env.ID, err)
+		return nil, err
+	}
+	for name, data := range envVariables {
+		variables[name] = data
+	}
 	return variables, nil
 }
 

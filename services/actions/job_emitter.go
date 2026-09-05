@@ -234,10 +234,27 @@ func checkRunConcurrency(ctx context.Context, run *actions_model.ActionRun) (*jo
 			continue
 		}
 		if job.ConcurrencyGroup == "" || checkedConcurrencyGroup.Contains(job.ConcurrencyGroup) {
-			continue
-		}
-		if err := collect(job.ConcurrencyGroup); err != nil {
+			// still fall through to the environment check below
+		} else if err := collect(job.ConcurrencyGroup); err != nil {
 			return nil, err
+		}
+	}
+
+	// A finished deployment job may free an environment's exclusive slot: wake runs blocked on the
+	// same environments of this repository.
+	envs := make(container.Set[string])
+	for _, job := range runJobs {
+		if job.Status.IsDone() && job.Environment != "" {
+			envs.Add(job.Environment)
+		}
+	}
+	for envName := range envs {
+		blockedRunIDs, err := actions_model.FindBlockedEnvironmentRunIDsInEnv(ctx, run.RepoID, envName, run.ID)
+		if err != nil {
+			return nil, fmt.Errorf("find blocked runs for environment %q: %w", envName, err)
+		}
+		for _, blockedRunID := range blockedRunIDs {
+			result.RunIDsToReEmit = append(result.RunIDsToReEmit, blockedRunID)
 		}
 	}
 	return result, nil
@@ -373,6 +390,8 @@ type jobStatusResolver struct {
 	// matrixUpdatedJobs holds jobs whose status matrix expansion persisted itself, so they are
 	// notified like the ones the caller updates from the resolved status map.
 	matrixUpdatedJobs []*actions_model.ActionRunJob
+	// envVars caches environment variables merged on top of the run variables, keyed by environment name.
+	envVars map[string]map[string]string
 }
 
 func newJobStatusResolver(jobs actions_model.ActionJobList, vars map[string]string) *jobStatusResolver {
@@ -411,6 +430,27 @@ func newJobStatusResolver(jobs actions_model.ActionJobList, vars map[string]stri
 		jobMap:    jobMap,
 		vars:      vars,
 	}
+}
+
+// varsForJob returns the expression variables for a job, merging environment-scoped variables
+// for jobs targeting an environment (environment variables override run-level ones).
+func (r *jobStatusResolver) varsForJob(ctx context.Context, job *actions_model.ActionRunJob) map[string]string {
+	if job.Environment == "" || job.Run == nil {
+		return r.vars
+	}
+	if merged, ok := r.envVars[job.Environment]; ok {
+		return merged
+	}
+	merged, err := actions_model.GetVariablesOfJob(ctx, job.Run, job.Environment)
+	if err != nil {
+		log.Error("load environment variables for job %d: %v", job.ID, err)
+		return r.vars
+	}
+	if r.envVars == nil {
+		r.envVars = make(map[string]map[string]string)
+	}
+	r.envVars[job.Environment] = merged
+	return merged
 }
 
 func (r *jobStatusResolver) Resolve(ctx context.Context) (map[int64]actions_model.Status, error) {
@@ -491,7 +531,8 @@ func (r *jobStatusResolver) resolve(ctx context.Context) (map[int64]actions_mode
 		// failed or were skipped has to be skipped too, not failed for a matrix those needs never
 		// produced the outputs for. An `if:` that reads `matrix.*` cannot be decided this early, so
 		// evaluateJobIf reduces it to that needs gate and the pass below decides it per combination.
-		shouldStartJob, err := evaluateJobIf(ctx, actionRunJob.Run, nil, actionRunJob, r.vars, allSucceed)
+		jobVars := r.varsForJob(ctx, actionRunJob)
+		shouldStartJob, err := evaluateJobIf(ctx, actionRunJob.Run, nil, actionRunJob, jobVars, allSucceed)
 		if err != nil {
 			// TODO: surface deterministic expression errors to users by failing the job with a message.
 			log.Error("evaluateJobIf failed, job will stay blocked: job: %d, err: %v", id, err)
@@ -528,7 +569,9 @@ func (r *jobStatusResolver) resolve(ctx context.Context) (map[int64]actions_mode
 		if wasDeferred {
 			// This row is now the first combination, and the `if:` can be evaluated.
 			// Gate it on its own combination here, as the siblings will be on the next pass.
-			shouldStartJob, err := evaluateJobIf(ctx, actionRunJob.Run, nil, actionRunJob, r.vars, allSucceed)
+			// The environment name may come from matrix.*, so (re)merge variables with the evaluated name.
+			comboVars := r.varsForJob(ctx, actionRunJob)
+			shouldStartJob, err := evaluateJobIf(ctx, actionRunJob.Run, nil, actionRunJob, comboVars, allSucceed)
 			if err != nil {
 				log.Error("evaluateJobIf failed after matrix expansion, job will stay blocked: job: %d, err: %v", id, err)
 				continue
@@ -539,13 +582,26 @@ func (r *jobStatusResolver) resolve(ctx context.Context) (map[int64]actions_mode
 			}
 		}
 
+		// Environment protection gates (approval, freeze window, manual lock, branch policy, exclusive slot).
+		// Reusable callers never deploy; their children carry their own `environment:` and get gated when they resolve.
+		if !actionRunJob.IsReusableCaller {
+			blocked, err := gateEnvironmentJob(ctx, actionRunJob.Run, nil, actionRunJob, r.varsForJob(ctx, actionRunJob))
+			if err != nil {
+				log.Error("environment gate failed, job will stay blocked: job: %d, err: %v", id, err)
+				continue
+			}
+			if blocked {
+				continue
+			}
+		}
+
 		// A slot-starved job cannot start, skip the following checks.
 		if !slots.available(actionRunJob) {
 			continue
 		}
 
 		// update concurrency and check whether the job can run now
-		err = updateConcurrencyEvaluationForJobWithNeeds(ctx, actionRunJob, r.vars)
+		err = updateConcurrencyEvaluationForJobWithNeeds(ctx, actionRunJob, r.varsForJob(ctx, actionRunJob))
 		if err != nil {
 			// The err can be caused by different cases: database error, or syntax error, or the needed jobs haven't completed
 			// At the moment there is no way to distinguish them.

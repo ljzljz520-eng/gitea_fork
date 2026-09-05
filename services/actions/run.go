@@ -193,7 +193,9 @@ func insertRunJob(ctx context.Context, run *actions_model.ActionRun, runAttempt 
 	payload, _ := workflowJob.Marshal()
 
 	isReusableWorkflowCaller := job.Uses != ""
-	shouldBlockJob := runAttempt.Status == actions_model.StatusBlocked || len(needs) > 0 || run.NeedApproval
+	// jobs targeting an environment enter the blocked state so the job emitter evaluates the environment
+	// protection gates (approval, freeze, lock, branch policy, exclusive deployment) before dispatch.
+	shouldBlockJob := runAttempt.Status == actions_model.StatusBlocked || len(needs) > 0 || run.NeedApproval || job.HasEnvironment()
 
 	attemptJobID, err := actions_model.GetNextAttemptJobID(ctx, run.ID)
 	if err != nil {

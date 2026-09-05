@@ -1259,6 +1259,23 @@ func registerWebRoutes(m *web.Router, webAuth *AuthMiddleware) {
 			addSettingsRunnersRoutes()
 			addSettingsSecretsRoutes()
 			addSettingsVariablesRoutes()
+			m.Group("/environments", func() {
+				m.Get("", reqRepoAdmin, shared_actions.Environments)
+				m.Post("", reqRepoAdmin, shared_actions.EnvironmentCreate)
+				m.Group("/{environment}", func() {
+					m.Get("", reqRepoAdmin, shared_actions.EnvironmentSettings)
+					m.Post("", reqRepoAdmin, shared_actions.EnvironmentUpdate)
+					m.Post("/delete", reqRepoAdmin, shared_actions.EnvironmentDelete)
+					m.Post("/lock", reqRepoAdmin, shared_actions.EnvironmentLock)
+					m.Post("/unlock", reqRepoAdmin, shared_actions.EnvironmentUnlock)
+					m.Post("/freeze-windows", reqRepoAdmin, shared_actions.FreezeWindowCreate)
+					m.Post("/freeze-windows/{window:[0-9]+}/delete", reqRepoAdmin, shared_actions.FreezeWindowDelete)
+					m.Post("/variables", reqRepoAdmin, shared_actions.EnvironmentVariableCreate)
+					m.Post("/variables/{variablename}/delete", reqRepoAdmin, shared_actions.EnvironmentVariableDelete)
+					m.Post("/secrets", reqRepoAdmin, shared_actions.EnvironmentSecretSet)
+					m.Post("/secrets/{secretname}/delete", reqRepoAdmin, shared_actions.EnvironmentSecretDelete)
+				})
+			})
 			m.Group("/general", func() {
 				m.Group("/collaborative_owner", func() {
 					m.Post("/add", repo_setting.AddCollaborativeOwner)

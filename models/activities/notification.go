@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"strconv"
 
+	actions_model "gitea.dev/models/actions"
 	"gitea.dev/models/db"
 	issues_model "gitea.dev/models/issues"
 	"gitea.dev/models/organization"
@@ -46,6 +47,8 @@ const (
 	NotificationSourceCommit
 	// NotificationSourceRepository is a notification for a repository
 	NotificationSourceRepository
+	// NotificationSourceDeployment is a notification for an Actions environment deployment review
+	NotificationSourceDeployment
 )
 
 // Notification represents a notification
@@ -60,6 +63,9 @@ type Notification struct {
 	IssueID   int64 `xorm:"NOT NULL"`
 	CommitID  string
 	CommentID int64
+
+	// DeploymentID references an Actions deployment review, only set for NotificationSourceDeployment.
+	DeploymentID int64 `xorm:"NOT NULL DEFAULT 0"`
 
 	UpdatedBy int64 `xorm:"NOT NULL"`
 
@@ -285,6 +291,8 @@ func (n *Notification) HTMLURL(ctx context.Context) string {
 		return n.Repository.HTMLURL(ctx) + "/commit/" + url.PathEscape(n.CommitID)
 	case NotificationSourceRepository:
 		return n.Repository.HTMLURL(ctx)
+	case NotificationSourceDeployment:
+		return n.Repository.HTMLURL(ctx) + n.Link(ctx)
 	}
 	return ""
 }
@@ -301,6 +309,12 @@ func (n *Notification) Link(ctx context.Context) string {
 		return n.Repository.Link() + "/commit/" + url.PathEscape(n.CommitID)
 	case NotificationSourceRepository:
 		return n.Repository.Link()
+	case NotificationSourceDeployment:
+		deployment, err := actions_model.GetDeploymentByID(ctx, n.DeploymentID)
+		if err != nil {
+			return n.Repository.Link() + "/actions"
+		}
+		return n.Repository.Link() + "/actions/runs/" + strconv.FormatInt(deployment.RunID, 10)
 	}
 	return ""
 }
